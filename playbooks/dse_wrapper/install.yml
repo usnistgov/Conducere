@@ -1,0 +1,17 @@
+---
+
+- name: Update apt cache
+  apt: update-cache=yes 
+  become: true
+
+- name: Install Python packages
+  command: pip install {{ item }}
+  with_items:
+    - sklearn
+  become: true
+
+- name: Clone DSE Wrapper repository
+  git:
+    repo: git@gitlab.nist.gov:dse/NIST_DSE_Wrapper.git
+    dest: "{{ ansible_env.HOME  }}/NIST_DSE_Wrapper"
+    accept_hostkey: yes

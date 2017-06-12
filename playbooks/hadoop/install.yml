@@ -1,0 +1,48 @@
+---
+
+- include_vars: vars.yml
+
+- name: Install prerequisites
+  apt: name={{ item }} state=present update-cache=yes
+  with_items:
+    - ssh
+    - default-jdk
+    - python-pip
+  become: true
+
+- name: Install python package pexpect for ansible
+  command: pip install pexpect
+  become: true
+
+## Download Hadoop tarball to local to avoid downloading multiple times
+- name: Download Hadoop
+  local_action: get_url url="{{ hadoop_tar_src }}" dest="{{ hadoop_tar_file }}"
+
+- name: Create hadoop group
+  group: name=hadoop state=present
+  become: true
+
+- name: Create hadoop user
+  user: name=hduser group=hadoop
+  become: true
+
+- name: Copy and unarchive hadoop
+  unarchive:
+    src: "{{ hadoop_tar_file }}"
+    dest: /tmp
+    owner: hduser
+    group: hadoop
+  become: true
+
+- name: Empty hadoop dir
+  file: path={{ hadoop_home }} state=absent
+  become: true
+
+- name: Install hadoop
+  command: mv /tmp/hadoop-2.7.2 {{ hadoop_home }}
+  become: true
+
+- name: Configure the permision, user and group of hadoop dir
+  file: path={{ hadoop_home }} state=directory mode=0755 owner=hduser group=hadoop
+  become: true
+

@@ -1,0 +1,9 @@
+---
+
+- name: Install ntp
+  apt: name=ntp state=present update-cache=yes
+  become: true
+
+- name: Restart ntp server
+  service: name=ntp state=restarted
+  become: true

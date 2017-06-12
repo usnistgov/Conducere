@@ -1,0 +1,26 @@
+---
+
+- include: config_common.yml
+
+- name: Add users to hadoop user group
+  user: name={{ item }} shell=/bin/bash groups=hadoop append=yes
+  with_items: "{{ hadoop_users }}"
+  become: true
+
+- name: Insert/update hadoop environment variables in .barshrc for hadoop users
+  blockinfile:
+    dest: "/home/{{ item }}/.bashrc"
+    marker: "#<!-- {mark} ANSIBLE MANAGED HADOOP BLOCK -->"
+    block: |
+      export JAVA_HOME={{ java_home }}
+      export HADOOP_INSTALL={{ hadoop_home }}
+      export PATH=$PATH:$HADOOP_INSTALL/bin
+      export PATH=$PATH:$HADOOP_INSTALL/sbin
+      export HADOOP_MAPRED_HOME=$HADOOP_INSTALL
+      export HADOOP_COMMON_HOME=$HADOOP_INSTALL
+      export HADOOP_HDFS_HOME=$HADOOP_INSTALL
+      export YARN_HOME=$HADOOP_INSTALL
+      export HADOOP_HOME=$HADOOP_INSTALL
+      export HADOOP_CONF_DIR={{ hadoop_conf_dir }}
+  with_items: "{{ hadoop_users }}"
+  become: true

@@ -1,0 +1,125 @@
+---
+
+- hosts: dse_master
+  remote_user: ubuntu
+
+  vars:
+  # hosts who's ip and hostname are needed to be in /etc/hosts
+  - nodes: "{{ groups.dse_cluster }}"
+
+  tasks:
+
+  - name: Install common tools
+    include: common/install.yml
+    tags: ['common', 'common-install']
+
+  - name: Configure common settings
+    include: common/config.yml
+    tags: ['common', 'common-config']
+
+  ## ntp server
+
+  - name: Ensure ntp server is running
+    include: ntp/server.yml
+    tags: ['ntp']
+
+  ## Hadoop master
+
+  - name: Install hadoop
+    include: hadoop/install.yml
+    tags: ['hadoop', 'hadoop-install']
+
+  - name: Configure hadoop master
+    include: hadoop/config_master.yml
+    tags: ['hadoop', 'hadoop-config']
+
+  - name: Run hadoop cluster
+    include: hadoop/run.yml
+    become: yes
+    become_user: hduser
+    tags: ['hadoop', 'hadoop-start']
+
+  - name: Check status of hadoop master
+    include: hadoop/status.yml
+    become: yes
+    become_user: hduser
+    tags: ['hadoop-status']
+
+  - name: Stop hadoop cluster
+    include: hadoop/stop.yml
+    become: yes
+    become_user: hduser
+    tags: ['hadoop-stop']
+
+  - name: Test hadoop by running a pi calculation
+    include: hadoop/test.yml
+    become: yes
+    become_user: hduser
+    tags: ['hadoop-test']
+
+  - name: HDFS report
+    include: hadoop/hdfs_report.yml
+    become: yes
+    become_user: hduser
+    tags: ['hadoop-hdfs-report']
+
+  ## Spark client
+
+  - name: Install Spark
+    include: spark/install.yml
+    tags: ['spark', 'spark-install']
+
+  - name: Configure Spark
+    include: spark/config.yml
+    tags: ['spark', 'spark-config']
+
+  - name: Test Spark
+    include: spark/test.yml
+    tags: ['spark-test']
+
+  ## Ganglia 
+
+  - name: Install Ganglia
+    include: ganglia/install_master.yml
+    tags: ['ganglia', 'ganglia-install']
+
+  - name: Configure Ganglia master
+    include: ganglia/config_master.yml
+    tags: ['ganglia', 'ganglia-config']
+
+  - name: Ensure Ganglia's services are running
+    include: ganglia/master_services.yml
+    tags: ['ganglia', 'ganglia-master']
+
+  - name: Ensure Ganglia's services are stopped
+    include: ganglia/stop_services.yml
+    tags: ['ganglia-stop']
+
+  ## Dmoni manager
+
+  - name: Install Dmoni
+    include: dmoni/install.yml
+    tags: ['dmoni', 'dmoni-install']
+
+  - name: Start DMoni manager
+    include: dmoni/start_manager.yml
+    tags: ['dmoni', 'dmoni-manager']
+
+  - name: Start DMoni agent
+    include: dmoni/start_agent.yml
+    tags: ['dmoni', 'dmoni-agent']
+
+  - name: Stop Dmoni manager
+    include: dmoni/stop_manager.yml
+    tags: ['dmoni-manager-stop']
+
+  - name: Stop Dmoni agent
+    include: dmoni/stop_agent.yml
+    tags: ['dmoni-agent-stop']
+
+  ## NFS manager
+
+  - name: Install NFS
+    include: nfs/config_master.yml
+    tags: ['nfs', 'nfs-master']
+

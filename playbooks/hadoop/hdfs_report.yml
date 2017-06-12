@@ -1,0 +1,8 @@
+
+- include_vars: vars.yml
+
+- name: Get the report of HDFS
+  command: hdfs dfsadmin -report
+  environment: "{{ hadoop_env }}"
+  register: result
+- debug: msg={{ result }}

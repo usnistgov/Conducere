@@ -1,0 +1,55 @@
+---
+
+- include_vars: vars.yml
+
+- name: Update apt cache
+  apt: update-cache=yes 
+  become: true
+
+- name: Install python package for Ansible's url_get to download Spark tarball
+  shell: pip install "{{ item }}"
+  with_items:
+    - urllib3
+    - pyopenssl
+    - ndg-httpsclient
+    - pyasn1
+  become: true
+
+## Download Spark tarball to local to avoid downloading multiple times
+- name: Download Spark
+  local_action: get_url url="{{ spark_tar_src }}" dest="{{ spark_tar_file }}"
+
+- name: Copy and unarchive Spark
+  unarchive:
+    src: "{{ spark_tar_file }}"
+    dest: /tmp
+    owner: hduser
+    group: hadoop
+  become: true
+
+- name: Empty Spark install dir
+  file: path={{ spark_home }} state=absent
+  become: true
+
+- name: Install Spark
+  command: mv /tmp/spark-2.0.2-bin-hadoop2.7 {{ spark_home }}
+  become: true
+
+- name: Configure the permision, user and group of spark dir
+  file: path={{ spark_home }} state=directory mode=0755 owner=hduser group=hadoop
+  become: true
+
+- name: Ensure Spark environment variables in .barshrc
+  blockinfile:
+    dest: /home/{{ item }}/.bashrc
+    marker: "#<!-- {mark} ANSIBLE MANAGED SPARK BLOCK -->"
+    block: |
+      export SPARK_HOME={{ spark_home }}
+      export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+  with_items: "{{ spark_users }}"
+  become: true
+  
+- name: Ensure spark users are in hadoop group
+  user: name={{ item }} groups=hadoop append=yes
+  with_items: "{{ spark_users }}"
+  become: true

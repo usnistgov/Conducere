@@ -1,0 +1,11 @@
+---
+
+- name: Ensure cluster hosts are in /etc/hosts
+  blockinfile:
+    dest: /etc/hosts
+    marker: "#<!-- {mark} ANSIBLE MANAGED HOST LIST -->"
+    block: |
+      {% for host in nodes %}
+      {{ hostvars[host]['ipv4'] }} {{ host }}
+      {% endfor %}
+  become: true

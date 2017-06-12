@@ -1,0 +1,8 @@
+
+- include_vars: vars.yml
+
+- name: Test if Hadoop is functioning by running a Pi calculation.
+  command: yarn jar {{ hadoop_home }}/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.2.jar pi 2 1000
+  environment: "{{ hadoop_env }}"
+  register: result
+- debug: msg={{ result }}

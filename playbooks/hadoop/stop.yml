@@ -1,0 +1,22 @@
+---
+
+- include_vars: vars.yml
+
+- name: Stop YARN
+  shell: stop-yarn.sh
+  environment: "{{ hadoop_env }}"
+  register: result
+- debug: msg={{ result }}
+
+- name: Stop hdfs
+  shell: stop-dfs.sh
+  environment: "{{ hadoop_env }}"
+  register: result
+- debug: msg={{ result }}
+
+- name: Stop JobHistory server
+  shell: mr-jobhistory-daemon.sh stop historyserver
+  environment: "{{ hadoop_env }}"
+  register: result
+- debug: msg={{ result }}
+

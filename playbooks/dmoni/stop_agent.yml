@@ -1,0 +1,10 @@
+---
+
+- include_vars: vars.yml
+
+- name: Stop DMoni agent
+  shell: dmoni_agent.sh stop
+  environment: "{{ dmoni_env }}"
+  become: true
+  register: result
+- debug: msg={{ result }}

@@ -1,0 +1,24 @@
+---
+
+### Playbook to cook a base image
+
+- hosts: base-image
+  remote_user: ubuntu
+
+  tasks:
+
+  - name: Install common tools
+    include: common/install.yml
+    tags: ['install', 'common-install']
+
+  - name: Install hadoop
+    include: hadoop/install.yml
+    tags: ['install', 'hadoop', 'hadoop-install']
+
+  - name: Install Spark
+    include: spark/install.yml
+    tags: ['install', 'spark', 'spark-install']
+
+  - name: Install Ganglia
+    include: ganglia/install_slave.yml
+    tags: ['install', 'ganglia-install']

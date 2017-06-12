@@ -1,0 +1,93 @@
+---
+
+- hosts: dse_client
+  remote_user: ubuntu
+
+  vars:
+  # hosts who's ip and hostname are needed to be in /etc/hosts
+  - nodes: 
+    - "{{ groups.dse_master[0] }}"
+    - "{{ groups.dse_client[0] }}"
+
+  tasks:
+
+    - name: Install common tools
+      include: common/install.yml
+      tags: ['install', 'common', 'common-install']
+  
+    - name: Configure common settings
+      include: common/config.yml
+      tags: ['config', 'common', 'common-config']
+
+    ## ntp client
+ 
+    - name: Ensure ntp client is running
+      include: ntp/client.yml
+      tags: ['ntp']
+
+    ## Hadoop client
+
+    - name: Install Hadoop
+      include: hadoop/install.yml
+      tags: ['hadoop', 'hadoop-install']
+ 
+    - name: Configure Hadoop so that client know where is hadoop master
+      include: hadoop/config_client.yml
+      tags: ['hadoop', 'hadoop-config']
+
+    - name: Test hadoop by running a pi calculation
+      include: hadoop/test.yml
+      tags: ['hadoop-test']
+
+    ## Spark client
+
+    - name: Install Spark
+      include: spark/install.yml
+      tags: ['spark', 'spark-install']
+
+    - name: Configure Spark
+      include: spark/config.yml
+      tags: ['spark', 'spark-config']
+
+    - name: Test Spark
+      include: spark/test.yml
+      tags: ['spark-test']
+
+    ## Ganglia
+
+    - name: Install Ganglia
+      include: ganglia/install_slave.yml
+      tags: ['ganglia', 'ganglia-install']
+ 
+    - name: Configure Ganglia slave
+      include: ganglia/config_slave.yml
+      tags: ['ganglia', 'ganglia-config']
+ 
+    - name: Ensure Ganglia slave's services are running
+      include: ganglia/slave_services.yml
+      tags: ['ganglia', 'ganglia-slave']
+
+    - name: Ensure Ganglia's services are stopped
+      include: ganglia/stop_services.yml
+      tags: ['ganglia-stop']
+ 
+    ## Dmoni agent
+
+    - name: Install Dmoni
+      include: dmoni/install.yml
+      tags: ['dmoni', 'dmoni-install']
+ 
+    - name: Start DMoni agent
+      include: dmoni/start_agent.yml
+      tags: ['dmoni', 'dmoni-agent']
+ 
+    - name: Stop Dmoni agent
+      include: dmoni/stop_agent.yml
+      tags: ['dmoni-agent-stop']
+
+    ## DSE wrapper
+
+    - name: Install DSE wrapper
+      include: dse_wrapper/install.yml
+      tags: ['dse-wrapper', 'dse-wrapper-install']
+

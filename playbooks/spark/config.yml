@@ -1,0 +1,14 @@
+---
+
+- include_vars: vars.yml
+
+- name: Ensure spark.conf file exsits and baked for running on YARN
+  template:
+    src: "{{ item }}"
+    dest: "{{ spark_home }}/conf/{{ item | basename | regex_replace('.j2','') }}"
+    owner: hduser
+    group: hadoop
+  with_items:
+    - spark-env.sh.j2
+  become: true
+

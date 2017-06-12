@@ -1,0 +1,10 @@
+---
+
+- include_vars: vars.yml
+
+- name: Stop DMoni manager
+  shell: dmoni_manager.sh stop
+  environment: "{{ dmoni_env }}"
+  become: true
+  register: result
+- debug: msg={{ result }}

@@ -1,0 +1,10 @@
+---
+
+- include_vars: vars.yml
+
+- name: Start DMoni agent daemon
+  shell: dmoni_agent.sh start
+  environment: "{{ dmoni_env }}"
+  become: true
+  register: result
+- debug: msg={{ result }}

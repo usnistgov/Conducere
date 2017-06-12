@@ -1,0 +1,43 @@
+---
+
+- include_vars: vars.yml
+
+- name: Install prerequisites
+  apt: name={{ item }} state=present update-cache=yes
+  with_items:
+    - python-dev
+    - python-pip
+  become: true
+
+- name: Download DMoni
+  local_action: get_url url="{{ dmoni_tar_src }}" dest="{{ dmoni_tar_file }}" validate_certs=no
+
+- name: Copy and unarchive DMoni
+  unarchive:
+    src: "{{ dmoni_tar_file }}"
+    dest: "{{ dmoni_tmp_dir | dirname }}"
+  become: true
+
+- name: Install python packages used by Snapshot
+  shell: "cd {{ dmoni_tmp_dir }}/snapshot && pip install ."
+  become: true
+
+- name: Create DMoni dir
+  file: path={{ dmoni_dir }} state=directory
+  become: true
+
+- name: Install DMoni
+  command: "cp -r {{ item }} {{ dmoni_dir }}"
+  with_items:
+    - "{{ dmoni_tmp_dir }}/bin"
+    - "{{ dmoni_tmp_dir }}/snapshot/snapshot"
+    - "{{ dmoni_tmp_dir }}/README.md"
+  become: true
+
+- name: Configure the permision, user and group of DMoni dir
+  file: path={{ dmoni_dir }} state=directory mode=0755 owner=root group=root
+  become: true
+
+- name: Delete tempary files
+  file: path={{ dmoni_tmp_dir }} state=absent
+  become: true

@@ -1,0 +1,63 @@
+---
+
+- include: config_common.yml
+
+- name: Ensure private key and public one are present on hadoop master
+  copy:
+    src: "bundle/ssh_keys/hduser/{{ item }}"
+    dest: /home/hduser/.ssh/
+    mode: 0600
+    owner: hduser
+    group: hadoop
+  with_items:
+    - id_rsa
+    - id_rsa.pub
+  become: true
+   
+- name: Authorize hduser to ssh login
+  authorized_key:
+    user: hduser
+    key: "{{ item }}"
+    state: present
+  with_file:
+    - bundle/ssh_keys/hduser/id_rsa.pub
+  become: true
+
+- name: Ensure hdfs namenode directory is empty
+  file: path={{ item }} state=absent
+  with_items: "{{ namenode_dirs }}"
+  become: true
+
+- name: Ensure hdfs namenode directory exists
+  file: path={{ item }} state=directory mode=0755 owner=hduser group=hadoop
+  with_items: "{{ namenode_dirs }}"
+  become: true
+
+- name: Ensure hdfs datanode directory is empty
+  file: path={{ item }} state=absent
+  with_items: "{{ datanode_dirs }}"
+  become: true
+
+- name: Ensure hdfs datanode directory exists
+  file: path={{ item }} state=directory mode=0755 owner=hduser group=hadoop
+  with_items: "{{ datanode_dirs }}"
+  become: true
+
+- name: Ensure hdfs secondary namenode's checkpoint directory is empty
+  file: path={{ item }} state=absent
+  with_items: "{{ checkpoint_dirs }}"
+  become: true
+
+- name: Ensure hdfs secondary namenode's checkpoint directory exists
+  file: path={{ item }} state=directory mode=0755 owner=hduser group=hadoop
+  with_items: "{{ checkpoint_dirs }}"
+  become: true
+
+- name: Format hdfs
+  shell: hdfs namenode -format -nonInteractive
+  environment: "{{ hadoop_env }}"
+  become: true
+  become_user: hduser
+  register: result
+- debug: var=result
+

@@ -1,0 +1,12 @@
+---
+
+- name: Ensure gmetad and ganglia-monitor services are started
+  service: name={{ item }} state=started
+  items: [gmetad, ganglia-monitor]
+  become: true
+
+- name: Restart Apache server
+  service: name=apache2 state=restarted
+  become: true
+
+

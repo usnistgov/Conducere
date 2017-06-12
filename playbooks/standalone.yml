@@ -1,0 +1,79 @@
+---
+
+- hosts: standalone
+  remote_user: ubuntu
+
+  vars:
+  - nodes: "{{ groups.standalone }}"
+
+  tasks:
+
+  - name: Install common tools
+    include: common/install.yml
+    tags: ['install', 'common', 'common-install']
+
+  - name: Configure common settings
+    include: common/config.yml
+    tags: ['config', 'common', 'common-config']
+
+  ## Hadoop standalone
+
+  - name: Install hadoop
+    include: hadoop/install.yml
+    tags: ['install', 'hadoop', 'hadoop-install']
+
+  - name: Configure hadoop standalone
+    include: hadoop/config_standalone.yml
+    tags: ['config', 'hadoop', 'hadoop-config']
+
+  - name: Run hadoop
+    include: hadoop/run.yml
+    become_user: hduser
+    become: true
+    tags: ['start', 'hadoop', 'hadoop-start']
+
+  - name: Stop hadoop
+    include: hadoop/stop.yml
+    become_user: hduser
+    become: true
+    tags: ['hadoop-stop']
+
+  - name: Test hadoop
+    include: hadoop/test.yml
+    become_user: hduser
+    become: true
+    tags: ['hadoop-test']
+
+  ## Spark client
+  
+  - name: Install Spark
+    include: spark/install.yml
+    tags: ['install', 'spark', 'spark-install']
+
+  - name: Configure Spark
+    include: spark/config.yml
+    tags: ['config', 'spark', 'spark-config']
+
+  - name: Test Spark
+    include: spark/test.yml
+    tags: ['spark', 'spark-test']
+
+
+  ## Ganglia
+
+  - name: Install Ganglia
+    include: ganglia/install_slave.yml
+    tags: ['install', 'ganglia-install']
+
+  ## Dmoni
+
+  - name: Install Dmoni
+    include: dmoni/install.yml
+    tags: ['install', 'dmoni-install']
+
+  ## DSE wrapper
+
+  - name: Install DSE wrapper
+    include: dse_wrapper/install.yml
+    tags: ['install', 'dse-wrapper-install']
+

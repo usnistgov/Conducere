@@ -1,0 +1,13 @@
+---
+
+spark_tar_src: https://www.apache.org/dist/spark/spark-2.0.2/spark-2.0.2-bin-hadoop2.7.tgz
+spark_tar_file: /tmp/spark-2.0.2-bin-hadoop2.7.tgz
+
+spark_home: /usr/local/spark
+hadoop_conf_dir: /usr/local/hadoop/etc/hadoop
+
+spark_users: [hduser, ubuntu]
+
+spark_env:
+  SPARK_HOME: "{{ spark_home }}"
+  PATH: "{{ ansible_env.PATH }}:{{ spark_home }}/bin:{{ spark_home }}/sbin"

@@ -1,0 +1,28 @@
+---
+
+hadoop_tar_src: http://download.nextag.com/apache/hadoop/common/hadoop-2.7.2/hadoop-2.7.2.tar.gz
+hadoop_tar_file: /tmp/hadoop-2.7.2.tar.gz
+
+java_home: /usr/lib/jvm/java-7-openjdk-amd64
+hadoop_home: /usr/local/hadoop
+
+hadoop_conf_dir: "{{ hadoop_home }}/etc/hadoop"
+hadoop_tmp_dir: /tmp/hadoop
+namenode_dirs: [/hdfs/namenode]
+datanode_dirs: [/hdfs/datanode]
+checkpoint_dirs: [/hdfs/namesecondary]
+nm_local_dirs: [/yarn-nm-local] # namenode local dir
+
+hdfs_replication: 1
+
+hadoop_env:
+  JAVA_HOME: "{{ java_home }}"
+  HADOOP_INSTALL: "{{ hadoop_home }}"
+  PATH: "{{ ansible_env.PATH }}:{{ hadoop_home }}/bin:{{ hadoop_home }}/sbin"
+  HADOOP_MAPRED_HOME: "{{ hadoop_home }}"
+  HADOOP_COMMON_HOME: "{{ hadoop_home }}"
+  HADOOP_HDFS_HOME: "{{ hadoop_home }}"
+  YARN_HOME: "{{ hadoop_home }}"
+  HADOOP_HOME: "{{ hadoop_home }}"
+  HADOOP_CONF_DIR: "{{ hadoop_conf_dir }}"
+

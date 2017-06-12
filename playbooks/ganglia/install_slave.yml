@@ -1,0 +1,9 @@
+---
+
+- name: Install Ganglia components
+  apt: name={{ item }} state=present update-cache=yes
+  with_items:
+    - ganglia-monitor
+    - ganglia-monitor-python
+    - gmetad
+  become: true

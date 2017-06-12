@@ -1,0 +1,28 @@
+[dse_master]
+master ipv4=10.10.0.4
+
+[dse_slaves]
+slave-0 ipv4=10.10.0.6
+slave-1 ipv4=10.10.0.5
+slave-2 ipv4=10.10.0.8
+
+[dse_client]
+client-0 ipv4=10.10.0.7
+
+[dse_cluster:children]
+dse_master
+dse_slaves
+dse_client
+
+[dse_cluster:vars]
+hadoop_namenode="{{ groups.dse_master[0] }}"
+hadoop_resource_manager="{{ groups.dse_master[0] }}"
+hadoop_slaves="{{ groups.dse_slaves }}"
+hadoop_users=['hduser', 'ubuntu', 'root']
+dmoni_manager="{{ groups.dse_master[0] }}"
+dmoni_storage="http://192.168.0.3:9200"
+ganglia_master="{{ groups.dse_master[0] }}"
+ntp_local_server="{{ groups.dse_master[0] }}"
+
+[dse_client:vars]
+hadoop_users=['hduser', 'ubuntu']

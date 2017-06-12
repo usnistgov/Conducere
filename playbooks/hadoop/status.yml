@@ -1,0 +1,6 @@
+---
+
+- name: Obtain hadoop processes running on a node
+  shell: jps
+  register: result
+- debug: msg={{ result }}

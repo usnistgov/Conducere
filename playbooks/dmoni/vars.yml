@@ -1,0 +1,11 @@
+dmoni_tar_src: https://github.com/usnistgov/dmoni/files/1045176/dmoni-0.9.0.tar.gz
+dmoni_tar_file: /tmp/dmoni-0.9.0.tar.gz
+dmoni_tmp_dir: /tmp/dmoni-0.9.0
+
+dmoni_dir: /usr/local/dmoni
+
+dmoni_env:
+  DMONIPATH: "{{ dmoni_dir }}"
+  DMONI_STORAGE: "{{ dmoni_storage }}"
+  DMONI_MANAGER: "{{ dmoni_manager }}"
+  PATH: "{{ ansible_env.PATH }}:{{ dmoni_dir }}/bin"

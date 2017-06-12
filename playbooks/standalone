@@ -1,0 +1,8 @@
+[standalone]
+host0 ipv4=127.0.0.1
+
+[standalone:vars]
+hadoop_namenode="{{ groups.standalone[0] }}"
+hadoop_resource_manager="{{ groups.standalone[0] }}"
+hadoop_slaves=["{{ groups.standalone[0] }}"]
+hadoop_users=['hduser', 'ubuntu']

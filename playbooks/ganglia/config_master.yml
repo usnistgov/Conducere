@@ -1,0 +1,23 @@
+---
+
+## Configure Ganglia running in Multicast mode.
+
+- include_vars: vars.yml
+
+- name: Ensure gmetad and ganglia-monitor services are stopped
+  service: name={{ item }} state=stopped
+  items: [gmetad, ganglia-monitor]
+  become: true
+
+- name: Ensure Ganglia web front-end config file exist in Apache's folder
+  shell: cp /etc/ganglia-webfrontend/apache.conf /etc/apache2/sites-enabled/ganglia.conf
+  become: true
+
+- name: Ensure gmetad and gmond's configuration files exist
+  template:
+    src: "{{ item }}"
+    dest: "/etc/ganglia/{{ item | basename | regex_replace('.j2','') }}"
+  with_items:
+    - gmetad.conf.j2
+    - gmond.conf.j2
+  become: true

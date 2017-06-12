@@ -1,0 +1,7 @@
+---
+
+# NFS server parameters
+server_shared_directory: /nfs_dir
+
+# NFS clients parameters
+client_mount_point: /var/nfs

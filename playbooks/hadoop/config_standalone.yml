@@ -1,0 +1,13 @@
+---
+
+- name: Enables Hadoop user to ssh to localhost, which is requred by Hadoop
+  include: user_key.yml
+  with_items: "{{ hadoop_users }}"
+
+- debug: msg="{{ ansible_nodename }}"
+
+- include: config_slave.yml
+
+- include: config_master.yml
+
+- include: config_client.yml

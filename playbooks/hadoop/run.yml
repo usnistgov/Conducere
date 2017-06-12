@@ -1,0 +1,99 @@
+---
+
+- include_vars: vars.yml
+
+- name: environment virables
+  shell: "{{ item }}"
+  environment: "{{ hadoop_env }}"
+  with_items:
+    - echo $JAVA_HOME
+    - echo $HADOOP_INSTALL
+    - echo $PATH
+    - echo $HADOOP_MAPRED_HOME
+    - echo $HADOOP_COMMON_HOME
+    - echo $HADOOP_HDFS_HOME
+    - echo $YARN_HOME
+    - echo $HADOOP_HOME
+    - echo $HADOOP_CONF_DIR
+#  register: result
+#- debug: msg={{ result }}
+
+- name: Obtain slave nodes' ssh fingerprints
+  shell: ssh-keyscan -T 10 {{ hadoop_slaves | join(" ") }}
+  register: keyscan
+- debug: msg={{ keyscan.stdout_lines }}
+- name: Add slave nodes' ssh fingerprints to know_hosts
+  lineinfile: name=/home/hduser/.ssh/known_hosts create=yes line={{ item }}
+  with_items: '{{ keyscan.stdout_lines }}'
+
+- name: Run hdfs including namenode and datanode
+  expect:
+    command: start-dfs.sh
+    responses:
+      Are you sure you want to continue connecting \(yes/no\)\?: "yes"
+  environment: "{{ hadoop_env }}"
+  register: result
+- debug: msg={{ result }}
+
+- name: Ensure /user exists on HDFS
+  shell: hdfs dfs -mkdir -p /user
+  environment: "{{ hadoop_env }}"
+  retries: 10 # retry and wait hdfs is not in safe mode
+  delay: 15 # delay 15 seconds
+  register: result
+
+- name: Ensure /user/history dir exists
+  shell: "{{ item }}"
+  environment: "{{ hadoop_env }}"
+  with_items:
+  - hdfs dfs -mkdir -p /user/history
+  - hdfs dfs -chmod -R 1777 /user/history 
+  - hdfs dfs -chown mapred:hadoop /user/history
+  register: result
+
+- name: Ensure hadoop tmp dir exists and has correct permission
+  shell: "{{ item }}"
+  environment: "{{ hadoop_env }}"
+  register: result
+  with_items:
+  - hdfs dfs -mkdir -p {{ hadoop_tmp_dir }}
+  - hdfs dfs -chmod -R 777 {{ hadoop_tmp_dir }}
+
+- name: Ensure each hdfs user has a home dir on hdfs
+  shell: "hdfs dfs -mkdir -p /user/{{ item }}"
+  environment: "{{ hadoop_env }}"
+  register: result
+  with_items: "{{ hadoop_users }}"
+
+- name: Ensure staging dir exists on HDFS for hdfs users
+  shell: "hdfs dfs -mkdir -p /user/{{ item }}/.staging"
+  environment: "{{ hadoop_env }}"
+  register: result
+  with_items: "{{ hadoop_users }}"
+
+- name: Ensure users own their home dir on HDFS
+  shell: "hdfs dfs -chown -R {{ item }}:{{ item }} /user/{{ item }}"
+  environment: "{{ hadoop_env }}"
+  register: result
+  with_items: "{{ hadoop_users }}"
+
+- name: Ensure correct permission of user's home directory on HDFS
+  shell: "hdfs dfs -chmod -R 700 /user/{{ item }}"
+  environment: "{{ hadoop_env }}"
+  register: result
+  with_items: "{{ hadoop_users }}"
+
+- name: Run YARN
+  expect:
+    command: start-yarn.sh
+    responses:
+      Are you sure you want to continue connecting \(yes/no\)\?: "yes"
+  environment: "{{ hadoop_env }}"
+  register: result
+- debug: msg={{ result }}
+
+- name: Run JobHistory server
+  shell: mr-jobhistory-daemon.sh start historyserver
+  environment: "{{ hadoop_env }}"
+  register: result
+  ignore_errors: True

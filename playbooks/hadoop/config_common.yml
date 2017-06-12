@@ -1,0 +1,43 @@
+--- 
+
+- include_vars: vars.yml
+
+- name: Ensure hadoop configure directory exists
+  file: path={{ hadoop_conf_dir }} state=directory mode=0755 owner=hduser group=hadoop
+  become: true
+
+- name: Ensure hadoop temparary directory exists
+  file: path={{ hadoop_tmp_dir }} state=directory mode=0755 owner=hduser group=hadoop
+  become: true
+
+- name: Ensure configure files are present
+  template:
+    src: "{{ item }}"
+    dest: "{{ hadoop_conf_dir }}/{{ item | basename | regex_replace('.j2','') }}"
+    owner: hduser
+    group: hadoop
+  with_items:
+    - core-site.xml.j2
+    - hdfs-site.xml.j2
+    - mapred-site.xml.j2
+    - yarn-site.xml.j2
+    - hadoop-env.sh.j2
+    - slaves.j2
+  become: true
+
+- name: Ensure hadoop environment variables in .barshrc
+  blockinfile:
+    dest: /home/hduser/.bashrc
+    marker: "#<!-- {mark} ANSIBLE MANAGED HADOOP BLOCK -->"
+    block: |
+      export JAVA_HOME={{ java_home }}
+      export HADOOP_INSTALL={{ hadoop_home }}
+      export PATH=$PATH:$HADOOP_INSTALL/bin
+      export PATH=$PATH:$HADOOP_INSTALL/sbin
+      export HADOOP_MAPRED_HOME=$HADOOP_INSTALL
+      export HADOOP_COMMON_HOME=$HADOOP_INSTALL
+      export HADOOP_HDFS_HOME=$HADOOP_INSTALL
+      export YARN_HOME=$HADOOP_INSTALL
+      export HADOOP_HOME=$HADOOP_INSTALL
+      export HADOOP_CONF_DIR={{ hadoop_conf_dir }}
+  become: true

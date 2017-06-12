@@ -1,0 +1,78 @@
+---
+
+- hosts: dse_slaves
+  remote_user: ubuntu
+
+  vars:
+  # hosts who's ip and hostname are needed to be in /etc/hosts
+  - nodes: "{{ groups.dse_cluster }}"
+
+  tasks:
+
+  - name: Install common tools
+    include: common/install.yml
+    tags: ['common', 'common-install']
+
+  - name: Configure common settings
+    include: common/config.yml
+    tags: ['common', 'common-config']
+
+  ## ntp client
+
+  - name: Ensure ntp client is running
+    include: ntp/client.yml
+    tags: ['ntp']
+
+  ## Hadoop
+
+  - name: Install hadoop
+    include: hadoop/install.yml
+    tags: ['hadoop', 'hadoop-install']
+
+  - name: Configure hadoop slave
+    include: hadoop/config_slave.yml
+    tags: ['hadoop', 'hadoop-config']
+
+  - name: Check status of hadoop slave
+    include: hadoop/status.yml
+    become: yes
+    become_user: hduser
+    tags: ['hadoop-status']
+
+  ## Ganglia
+
+  - name: Install Ganglia
+    include: ganglia/install_slave.yml
+    tags: ['ganglia', 'ganglia-install']
+
+  - name: Configure Ganglia slave
+    include: ganglia/config_slave.yml
+    tags: ['ganglia', 'ganglia-config']
+
+  - name: Ensure Ganglia's services are running
+    include: ganglia/slave_services.yml
+    tags: ['ganglia', 'ganglia-slave']
+
+  - name: Ensure Ganglia's services are stopped
+    include: ganglia/stop_services.yml
+    tags: ['ganglia-stop']
+
+  ## Dmoni agent
+
+  - name: Install Dmoni
+    include: dmoni/install.yml
+    tags: ['dmoni', 'dmoni-install']
+
+  - name: Start DMoni agent
+    include: dmoni/start_agent.yml
+    tags: ['dmoni', 'dmoni-agent']
+
+  - name: Stop Dmoni agent
+    include: dmoni/stop_agent.yml
+    tags: ['dmoni-agent-stop']
+
+  ## NFS client
+
+  - name: Install NFS
+    include: nfs/config_client.yml
+    tags: ['nfs', 'nfs-client']

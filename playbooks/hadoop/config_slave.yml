@@ -1,0 +1,32 @@
+---
+
+- include: config_common.yml
+
+- name: Authorize hduser to ssh login
+  authorized_key:
+    user: hduser
+    key: "{{ item }}"
+    state: present
+  with_file:
+    - bundle/ssh_keys/hduser/id_rsa.pub
+  become: true
+
+- name: Ensure node manager local directory is empty
+  file: path={{ item }} state=absent
+  with_items: "{{ nm_local_dirs }}"
+  become: true
+
+- name: Ensure node manager local  directory exists
+  file: path={{ item }} state=directory mode=0755 owner=hduser group=hadoop
+  with_items: "{{ nm_local_dirs }}"
+  become: true
+
+- name: Ensure hdfs datanode directory is empty
+  file: path={{ item }} state=absent
+  with_items: "{{ datanode_dirs }}"
+  become: true
+
+- name: Ensure hdfs datanode directory exists
+  file: path={{ item }} state=directory mode=0755 owner=hduser group=hadoop
+  with_items: "{{ datanode_dirs }}"
+  become: true

@@ -1,0 +1,36 @@
+---
+
+- include_vars: vars.yml
+
+- name: Install prerequisites
+  apt: name={{ item }} state=installed update_cache=yes
+  with_items:
+    - nfs-kernel-server
+    - rpcbind
+  become: true
+
+- name: Configure rpcbind
+  raw: sudo dpkg-reconfigure rpcbind
+  become: true
+
+- name: Restart rpcbind
+  service: name=rpcbind state=restarted
+  become: true
+
+- name: Create shared directory
+  file: path={{ server_shared_directory }} state=directory mode=777 owner=root group=root
+  become: true
+
+- name: Configure the /etc/exports file
+  template: src=exports.j2 dest=/etc/exports owner=root group=root
+  become: true
+
+- name: Apply changes
+  raw: sudo exportfs -a
+  become: true
+
+- name: Restart nfs server
+  service: name=nfs-kernel-server state=restarted
+  become: true
+
+

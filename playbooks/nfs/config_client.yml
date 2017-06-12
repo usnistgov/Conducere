@@ -1,0 +1,27 @@
+---
+
+- include_vars: vars.yml
+
+- name: Install prerequisites
+  apt: name={{ item }} state=installed update_cache=yes
+  with_items:
+    - nfs-common
+    - rpcbind
+  become: true
+
+- name: Create mount point
+  file: path={{ client_mount_point }} state=directory mode=777 owner=root group=root
+  become: true
+
+- name: Mount NFS volume
+  mount: 
+    path: "{{ client_mount_point }}"
+    src: "{{ groups.dse_master.0 }}:{{server_shared_directory}}"
+    fstype: nfs
+    opts: proto=tcp,port=2049,bg,intr,timeo=10
+    state: mounted
+  become: true
+  
+- name: Restart rpcbind
+  service: name=rpcbind state=restarted
+  become: true

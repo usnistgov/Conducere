@@ -1,0 +1,15 @@
+---
+
+- name: Update apt cache
+  apt: update-cache=yes 
+  become: true
+
+- name: Install common tools
+  apt: name={{ item }} state=present update-cache=yes
+  with_items:
+    - vim
+    - python-dev
+    - python-pip
+    - python-numpy
+    - python-scipy
+  become: true

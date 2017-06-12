@@ -1,0 +1,6 @@
+---
+
+- name: Ensure ganglia-monitor services are started
+  service: name={{ item }} state=started
+  items: [ganglia-monitor]
+  become: true

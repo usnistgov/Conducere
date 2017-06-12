@@ -1,0 +1,6 @@
+---
+
+- name: Ensure gmetad and ganglia-monitor services are stoped
+  service: name={{ item }} state=stopped
+  items: [gmetad, ganglia-monitor]
+  become: true

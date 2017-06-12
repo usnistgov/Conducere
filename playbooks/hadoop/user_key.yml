@@ -1,0 +1,19 @@
+---
+
+# The following two task enables Hadoopitemto ssh to localhost, which is requred by Hadoop
+
+- name: Generate ssh key pair for Hadoop user "{{ item }}"
+  user: name="{{ item }}" generate_ssh_key=yes state=present
+  become: true
+
+- name: Store public key in a variable
+  shell: cat /home/"{{ item }}"/.ssh/id_rsa.pub
+  register: data
+  become: true
+
+- name: Add public key to authorized_keys file
+  authorized_key:
+    user: "{{ item }}"
+    state: present
+    key: "{{ data['stdout'] }}"
+  become: true
