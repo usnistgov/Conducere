@@ -1,0 +1,255 @@
+# This template is compatible with template versions from 2016-04-08
+# For more information about template versions, check this guide: https://docs.openstack.org/developer/heat/template_guide/hot_spec.html#heat-template-version
+heat_template_version: 2016-04-08
+
+
+description: Simple template to deploy a cluster architecture
+
+######## PARAMETERS SECTION STARTS HERE ########
+# Parameters to customize the cluster
+parameters:
+
+# Default image used by the instances. The EMS system has been tested on Ubuntu 14.04 only so far.
+  image:
+    type: string
+    label: image
+    default: Ubuntu 14.04_DSE_base
+
+# Default flavor of the instances
+  default-flavor:
+    type: string
+    label: Default flavor
+    default: m1.small
+
+# Master's name.
+  master-name:
+    type: string
+    label: master-basename
+    default: "master"
+
+# Prefix of the slaves names. The slaves will be named "prefix<INDEX>""
+  slaves-basename:
+    type: string
+    label: slaves-basename
+    default: "slave-"
+
+# Prefix of the client's names. The clients will be named "prefix<INDEX>""
+  clients-basename:
+    type: string
+    label: clients-basename
+    default: "client-"
+
+# Number of slaves to create
+  slaves-count:
+    type: number
+    label: slaves-count
+    default: 3
+
+# Number of clients to create
+  clients-count:
+    type: number
+    label: clients-count
+    default: 1
+
+# Whether a floating ip address is configured and assigned to the Master node or not
+  assign-floating-ip:
+    type: boolean
+    label: assign-floating-ip
+    default: false
+
+# DNS servers adddresses
+  dns-nameservers:
+    type: comma_delimited_list
+    label: dns-nameservers
+    default: "8.8.8.8,8.8.4.4"
+
+#  ID or name of public network for which floating IP addresses will be allocated
+  external-gateway-info:
+    type: string
+    label: external-gateway-info
+    default: "external_floating_net"
+
+######## PARAMETERS SECTION END HERE ########
+
+
+# Cluster resources
+resources:
+
+# New ssh key pair
+  sshk-0:
+   type: OS::Nova::KeyPair
+   properties:
+    name: sshk-0
+    save_private_key: true
+
+# New security group that allows all egress trafic, ingress trafic from this security group, and all SSH ingress trafic (TCP port 22)
+  sgroup-0:
+    type: OS::Neutron::SecurityGroup
+    properties:
+     description: Allows ingress ssh connections.
+     name: sgroup-0
+     rules: [{"remote_ip_prefix": "::/0",
+         "direction": ingress,
+         "ethertype": IPv6,
+         "remote_mode": remote_group_id},
+         {"remote_ip_prefix": 0.0.0.0/0,
+         "direction": ingress,
+         "ethertype": IPv4,
+         "remote_mode": remote_group_id},
+         {"remote_ip_prefix": 0.0.0.0/0,
+         "direction": ingress,
+         "ethertype": IPv4,
+         "protocol": ICMP,
+         "remote_mode": remote_group_id},
+         {"remote_ip_prefix": "::/0",
+         "direction": egress,
+         "ethertype": IPv6},
+         {"remote_ip_prefix": 0.0.0.0/0,
+         "direction": egress,
+         "ethertype": IPv4},
+         { "port_range_min": 22,
+         "port_range_max": 22,
+         "protocol": TCP,
+         "remote_ip_prefix": 0.0.0.0/0,
+         "direction": ingress,
+         "ethertype": IPv4}]
+
+# Virtual network
+  net-0:
+    type: OS::Neutron::Net
+    properties:
+      name: net-0
+
+# Subnet attached to the network
+  subnet-0:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: net-0 }
+      dns_nameservers: { get_param: dns-nameservers }
+      cidr: 10.10.0.0/24
+
+# Virtual router
+  rt-0:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: external-gateway-info }
+
+# Router interface with the subnet
+  rt-if-0:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: rt-0 }
+      subnet_id: { get_resource: subnet-0 }
+
+# Port to access Master node
+  port-master:
+    type: OS::Neutron::Port
+    properties:
+     network_id: { get_resource: net-0 }
+     security_groups: [{ get_resource: sgroup-0 }]
+     fixed_ips:
+        - subnet_id: { get_resource: subnet-0 }
+
+# Master node instance
+  master-node:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: master-name }
+      availability_zone: nova
+      key_name: { get_resource: sshk-0 }
+      image: { get_param: image }
+      flavor: { get_param: default-flavor }
+      security_groups: [{ get_resource: sgroup-0 }]
+      networks:
+        - port: { get_resource: port-master }
+
+# # Floating ip association of the master node
+# # This block is commented by default.
+# # The "condition" parameter must be commented in any heat version < Newton (2016-10-14)
+#   fipass-0:
+#     type: OS::Nova::FloatingIPAssociation
+# #   condition: condition-assign-floating-ip
+#     properties:
+#       floating_ip:
+#             type: OS::Nova::FloatingIP
+#       server_id: { get_resource: master-node }
+
+#
+# Slaves instances' ports
+  slaves-ports-group:
+     type: OS::Heat::ResourceGroup
+     properties:
+       count: { get_param: slaves-count }
+       resource_def:
+         type: OS::Neutron::Port
+         properties:
+           network_id: { get_resource: net-0 }
+           name: slaves-port-%index%
+           security_groups: [{ get_resource: sgroup-0 }]
+           fixed_ips:
+             - subnet_id: { get_resource: subnet-0 }
+
+# Slaves instances
+  slaves-group:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: slaves-count }
+      resource_def:
+        type: OS::Nova::Server
+        properties:
+          name:
+            str_replace:
+              template: basename%index%
+              params:
+                basename: { get_param: slaves-basename }
+          availability_zone: nova
+          key_name: { get_resource: sshk-0 }
+          image: { get_param: image }
+          flavor: { get_param: default-flavor }
+          networks:
+            - port: slaves-port-%index%
+    depends_on: slaves-ports-group
+
+# Client instances' ports
+  clients-ports-group:
+     type: OS::Heat::ResourceGroup
+     properties:
+       count: { get_param: clients-count }
+       resource_def:
+         type: OS::Neutron::Port
+         properties:
+           network_id: { get_resource: net-0 }
+           name: clients-port-%index%
+           security_groups: [{ get_resource: sgroup-0 }]
+           fixed_ips:
+             - subnet_id: { get_resource: subnet-0 }
+
+# Client instances
+  clients-group:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: clients-count }
+      resource_def:
+        type: OS::Nova::Server
+        properties:
+          name:
+            str_replace:
+              template: basename%index%
+              params:
+                basename: { get_param: clients-basename }
+          availability_zone: nova
+          key_name: { get_resource: sshk-0 }
+          image: { get_param: image }
+          flavor: { get_param: default-flavor }
+          networks:
+            - port: clients-port-%index%
+    depends_on: clients-ports-group
+
+# Parameters to monitor using stack show
+outputs:
+
+# SSH key private key output
+  private_ssh_key:
+    description: Private ssh key to access nodes.
+    value: { get_attr: [sshk-0, private_key] }
