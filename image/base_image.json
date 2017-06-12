@@ -1,0 +1,27 @@
+{
+  "builders": [
+    {
+      "type": "openstack",
+      "image_name": "Ubuntu 14.04_nist_base",
+      "source_image": "bc5e15f8-49dc-484f-9aa0-4252f8867390",
+      "ssh_username": "ubuntu",
+      "flavor": "m1.small",
+      "networks": ["912f026b-0061-4235-be9f-714eb269d58b"],
+      "floating_ip": "192.168.0.2",
+      "insecure": true
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "install.sh"
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "../playbooks/build_image.yml",
+      "inventory_groups": ["base-image"],
+      "playbook_dir": "../playbooks"
+    }
+  ]
+}
