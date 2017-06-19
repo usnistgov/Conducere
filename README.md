@@ -1,6 +1,6 @@
-## AutoPro
+## Conducere
 ---
-AutoPro, short for Automate Provision, defines an automate workflow of configuring large and ready to use OpenStack clusters from scratch by using open source tools and pre-defined templates. It has been developed by the EMS team of IAD group at National Institute of Standards and Technology (NIST), with our experience of evaluating data science projects which rely on large Hadoop, Spark clusters heavily.
+Conducere, latin for conductor, defines an automate workflow of configuring large and ready to use OpenStack clusters from scratch by using open source tools and pre-defined templates. It has been developed by the EMS team of IAD group at National Institute of Standards and Technology (NIST), with our experience of evaluating data science projects which rely on large Hadoop, Spark clusters heavily.
 
 The automate workflow has three steps:
 
