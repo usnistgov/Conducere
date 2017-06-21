@@ -1,0 +1,21 @@
+{% for group in conf %}
+[{{ group['header'] }}]
+{% for config_line in group['config_lines'] %}{{ config_line['name'] }} ipv4={{ config_line['address'] }}
+{% endfor %}
+{% endfor %}
+[dse_cluster:children]
+{% for group in conf %}{{ group['header'] }}
+{% endfor %}
+
+[dse_cluster:vars]
+hadoop_namenode="{{ '{{' }} groups.dse_master[0] {{ '}}' }}"
+hadoop_resource_manager="{{ '{{' }} groups.dse_master[0] {{ '}}' }}"
+hadoop_slaves="{{ '{{' }} groups.dse_slaves {{ '}}' }}"
+hadoop_users=['hduser', 'ubuntu', 'root']
+dmoni_manager="{{ '{{' }} groups.dse_master[0] {{ '}}' }}"
+dmoni_storage="http://192.168.0.3:9200"
+ganglia_master="{{ '{{' }} groups.dse_master[0] {{ '}}' }}"
+ntp_local_server="{{ '{{' }} groups.dse_master[0] {{ '}}' }}"
+
+[dse_client:vars]
+hadoop_users=['hduser', 'ubuntu']
